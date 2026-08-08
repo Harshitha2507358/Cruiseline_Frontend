@@ -1,0 +1,77 @@
+# CruiseLine — New Frontend
+
+A redesigned React frontend for the CruiseLine Operations & Passenger Management system.
+It talks to the **existing backend unchanged** through the API gateway. Two distinct
+experiences share one CruiseLine theme:
+
+- **Passenger** — a clean travel-app: discover → choose → book → pay → manage trip.
+- **Staff / Operations** — a role-based operations console (Admin, Embarkation Officer,
+  Excursion Coordinator, Purser, Onboard Agent).
+
+## Requirements
+- Node 18+
+- The CruiseLine backend running behind the gateway (default `http://localhost:8081`),
+  with Eureka + all services up.
+
+## Run
+```bash
+npm install
+npm run dev
+```
+Opens on http://localhost:5173 (the origin the backend gateway already allows in CORS).
+
+Build for production:
+```bash
+npm run build
+npm run preview
+```
+
+## Configuration
+The backend base URL is configurable — edit `.env`:
+```
+VITE_API_BASE_URL=http://localhost:8081
+```
+
+## How it connects to the backend
+- **Auth:** `POST /api/auth/login` → `{ accessToken, refreshToken, userId, name, email, role }`.
+  Tokens are stored in `localStorage`; the access token is attached as `Authorization: Bearer …`
+  on every request. A 401 triggers a one-shot refresh via `/api/auth/refresh-token`.
+- **Envelope:** every response is `{ success, message, data, timestamp }` — the client
+  unwraps `.data`. Lists are Spring pages (`{ content, totalPages, … }`).
+- **Roles** (single role per user): `PASSENGER, EMBARKATION_OFFICER, ONBOARD_AGENT,
+  EXCURSION_COORDINATOR, PURSER, ADMIN`. Self-registration always creates a PASSENGER.
+- No fake endpoints or mock data — every call maps to a real backend endpoint.
+
+## Project structure
+```
+src/
+  api/            client.js + services/ (one module per domain)
+  auth/           AuthContext, ProtectedRoute (role-aware guards)
+  config/         roles.js (capability sets), nav.js (role → navigation)
+  components/
+    ui/           PageHeader, DataTable, StatusBadge, StatCard, states,
+                  ConfirmDialog, SearchableSelect, VoyageCard, BookingCard
+    layout/       StaffLayout + Sidebar, PassengerLayout + PassengerNavbar, ProfileMenu
+  hooks/          useApi (loading/error/reload), useOptions (pickers)
+  notifications/  NotificationContext (10s polling, toasts + unread badge)
+  constants/      enums.js (values, status→variant, money/humanize helpers)
+  pages/          LoginPage + passenger/ (Home, Explore, VoyageDetail, BookingFlow,
+                  MyBookings, Excursions, Profile)
+  features/       dashboard, voyages, bookings, embarkation, excursions, accounts,
+                  analytics, users, notifications  (staff screens)
+  assets/         images.js (local gradient imagery, no external URLs)
+  styles/         theme.css
+```
+
+## Role → navigation
+- **Passenger** (top navbar): Home · Explore Voyages · My Bookings · Excursions · Notifications · Profile
+- **Admin** : Dashboard · Voyages & Cabins · Bookings · Embarkation · Shore Excursions · Onboard Accounts · Analytics · Notifications · Users
+- **Embarkation Officer:** Dashboard · Embarkation (Manifest/Check-in · Muster · Drills) · Notifications
+- **Excursion Coordinator:** Dashboard · Shore Excursions (catalogue + manifests) · Notifications
+- **Purser:** Dashboard · Onboard Accounts · Payments · Notifications
+- **Onboard Agent:** Dashboard · Onboard Accounts · Notifications
+
+Frontend route guards are UX only — the backend remains the real authority.
+
+## Default admin
+Seeded by the backend: `admin@cruiseline.com` / `Admin@12345` (not shown in the UI).

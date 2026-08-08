@@ -1,0 +1,428 @@
+/* ============================================================
+   CruiseLine theme — navy + ocean + restrained gold.
+   One consistent system for both the passenger app and the
+   staff operations console.
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --cl-navy: #0a2342;
+  --cl-deep: #0d2c54;
+  --cl-ink: #14233b;
+  --cl-ocean: #1e5a8a;
+  --cl-ocean-soft: #3a7ca5;
+  --cl-gold: #c5a253;
+  --cl-gold-soft: #d9c189;
+
+  --cl-bg: #f4f6f9;
+  --cl-surface: #ffffff;
+  --cl-line: #e6e9ef;
+  --cl-text: #243142;
+  --cl-muted: #7c8a9c;
+
+  --cl-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --cl-serif: 'Fraunces', Georgia, 'Times New Roman', serif;
+
+  --cl-shadow-sm: 0 1px 3px rgba(10,35,66,.05), 0 1px 2px rgba(10,35,66,.04);
+  --cl-shadow: 0 4px 18px rgba(10,35,66,.07), 0 2px 6px rgba(10,35,66,.04);
+  --cl-shadow-lg: 0 14px 40px rgba(10,35,66,.12);
+
+  --cl-radius: 14px;
+  --cl-radius-sm: 10px;
+  --cl-sidebar-w: 248px;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--cl-bg);
+  font-family: var(--cl-sans);
+  color: var(--cl-text);
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, h4 { font-family: var(--cl-serif); color: var(--cl-ink); letter-spacing: .2px; }
+a { color: var(--cl-ocean); text-decoration: none; }
+a:hover { color: var(--cl-navy); }
+html, body { max-width: 100%; overflow-x: hidden; }
+
+/* ---------- Buttons ---------- */
+.btn { border-radius: 10px; font-weight: 600; letter-spacing: .2px; transition: transform .15s ease, box-shadow .2s ease, filter .2s ease; }
+.btn:active { transform: translateY(1px); }
+.cl-btn-primary, .btn.cl-btn-primary { background: var(--cl-navy); border: 1px solid var(--cl-navy); color: #fff; }
+.cl-btn-primary:hover { background: var(--cl-deep); color: #fff; box-shadow: 0 6px 16px rgba(10,35,66,.18); }
+.cl-btn-gold { background: linear-gradient(135deg, var(--cl-gold), #a8842f); border: none; color: #fff; }
+.cl-btn-gold:hover { color: #fff; filter: brightness(1.05); }
+.btn-outline-primary { color: var(--cl-ocean); border-color: var(--cl-ocean); }
+.btn-outline-primary:hover { background: var(--cl-ocean); border-color: var(--cl-ocean); }
+
+/* ---------- Cards ---------- */
+.cl-card {
+  background: var(--cl-surface);
+  border: 1px solid var(--cl-line);
+  border-radius: var(--cl-radius);
+  box-shadow: var(--cl-shadow-sm);
+  padding: 18px;
+}
+.cl-card + .cl-card { margin-top: 18px; }
+.card { border: 1px solid var(--cl-line); border-radius: var(--cl-radius); box-shadow: var(--cl-shadow-sm); }
+
+/* ============================================================
+   UNIFIED APP SHELL — one top navbar for EVERY role (no sidebar)
+   ============================================================ */
+.cl-app { min-height: 100vh; display: flex; flex-direction: column; }
+
+.cl-nav {
+  position: sticky; top: 0; z-index: 30;
+  background: rgba(255,255,255,.92);
+  backdrop-filter: saturate(160%) blur(12px);
+  -webkit-backdrop-filter: saturate(160%) blur(12px);
+  border-bottom: 1px solid var(--cl-line);
+  box-shadow: var(--cl-shadow-sm);
+}
+.cl-nav-inner {
+  max-width: 1320px; margin: 0 auto; padding: 0 24px;
+  height: 68px; display: flex; align-items: center; gap: 20px;
+}
+.cl-nav-brand {
+  font-family: var(--cl-serif); font-size: 1.42rem; font-weight: 600;
+  color: var(--cl-navy); display: flex; align-items: center; white-space: nowrap;
+}
+.cl-nav-brand i { color: var(--cl-gold); margin-right: 8px; }
+.cl-nav-brand:hover { color: var(--cl-deep); }
+
+/* menu = links + account, sits to the right of the brand */
+.cl-nav-menu { margin-left: auto; display: flex; align-items: center; gap: 14px; min-width: 0; }
+
+/* links strip — stays on one row and scrolls if a role has many items */
+.cl-nav-links {
+  display: flex; align-items: center; gap: 4px; min-width: 0;
+  overflow-x: auto; scrollbar-width: none;
+}
+.cl-nav-links::-webkit-scrollbar { display: none; }
+
+.cl-nav-item {
+  display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+  padding: 9px 13px; border-radius: 10px;
+  color: var(--cl-text); font-weight: 500; font-size: .92rem; text-decoration: none;
+  transition: background .18s ease, color .18s ease;
+}
+/* Icons are hidden on the desktop bar for a clean, roomy text nav (they return
+   in the mobile dropdown where there's space) — this also lets a 9-item admin
+   nav fit on one row without scrolling. */
+.cl-nav-item i { display: none; font-size: 1rem; color: var(--cl-ocean); transition: color .18s ease; }
+.cl-nav-item:hover { background: var(--cl-bg); color: var(--cl-navy); }
+.cl-nav-item.active { background: rgba(30,90,138,.10); color: var(--cl-navy); font-weight: 600; }
+.cl-nav-item.active i { color: var(--cl-gold); }
+
+.cl-nav-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
+  background: #d64545; color: #fff; font-size: .68rem; font-weight: 700; line-height: 1;
+}
+.cl-nav-account { flex-shrink: 0; }
+/* On the desktop bar keep the account compact (avatar + caret); the name and
+   role live in the dropdown. This frees room so a full 9-item admin nav fits. */
+.cl-nav-account .cl-profile-meta { display: none; }
+.cl-nav-account .cl-profile-toggle { padding: 4px 8px 4px 4px; }
+
+.cl-nav-toggle {
+  display: none; align-items: center; justify-content: center;
+  width: 42px; height: 42px; margin-left: auto;
+  border: 1px solid var(--cl-line); border-radius: 10px;
+  background: #fff; color: var(--cl-navy); font-size: 1.25rem; cursor: pointer;
+}
+.cl-nav-toggle:hover { background: var(--cl-bg); border-color: var(--cl-gold); }
+
+.cl-app-content { flex: 1; width: 100%; max-width: 1320px; margin: 0 auto; padding: 28px 24px 56px; }
+.cl-app-foot {
+  text-align: center; padding: 12px 22px; color: var(--cl-muted); font-size: .8rem;
+  border-top: 1px solid var(--cl-line); background: #fff;
+}
+.cl-app-foot i { color: var(--cl-gold); }
+
+/* ---------- Profile menu ---------- */
+.cl-profile-toggle {
+  display: flex; align-items: center; gap: 10px;
+  background: #fff; border: 1px solid var(--cl-line); border-radius: 999px;
+  padding: 5px 12px 5px 5px; cursor: pointer;
+}
+.cl-profile-toggle:hover { border-color: var(--cl-gold); }
+.cl-profile-toggle::after { display: none; }
+.cl-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--cl-navy); color: #fff; font-weight: 700; font-size: .82rem;
+}
+.cl-profile-meta { display: flex; flex-direction: column; line-height: 1.1; text-align: left; }
+.cl-profile-name { font-size: .86rem; font-weight: 600; color: var(--cl-ink); }
+.cl-profile-role { font-size: .72rem; color: var(--cl-gold); font-weight: 600; }
+.cl-profile-caret { font-size: .7rem; color: var(--cl-muted); }
+.cl-profile-head { display: flex; flex-direction: column; gap: 1px; padding: 6px 12px 8px; }
+.cl-profile-head-name { font-weight: 600; color: var(--cl-ink); font-size: .92rem; }
+.cl-profile-head-role { color: var(--cl-gold); font-weight: 600; font-size: .74rem; }
+.cl-profile-head-email { color: var(--cl-muted); font-size: .78rem; margin-top: 2px; }
+
+/* ============================================================
+   PAGE HEADER
+   ============================================================ */
+.cl-page-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 22px; flex-wrap: wrap; }
+.cl-page-title { font-weight: 600; font-size: 1.9rem; color: var(--cl-navy); margin: 0; position: relative; }
+.cl-page-title::after { content: ''; display: block; width: 48px; height: 3px; margin-top: 8px; border-radius: 3px; background: linear-gradient(90deg, var(--cl-gold), var(--cl-gold-soft)); }
+.cl-page-subtitle { color: var(--cl-muted); margin: 12px 0 0; font-size: .95rem; }
+.cl-page-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.cl-breadcrumbs { font-size: .82rem; color: var(--cl-muted); margin-bottom: 6px; }
+.cl-breadcrumbs a { color: var(--cl-ocean); }
+.cl-section-title { font-family: var(--cl-serif); font-size: 1.3rem; color: var(--cl-navy); margin: 0 0 14px; }
+
+/* ============================================================
+   STAT CARDS
+   ============================================================ */
+.cl-stat-link { display: block; color: inherit; }
+.cl-stat-card { display: flex; align-items: center; gap: 14px; background: var(--cl-surface); border: 1px solid var(--cl-line); border-radius: var(--cl-radius); box-shadow: var(--cl-shadow-sm); padding: 18px; transition: transform .2s ease, box-shadow .2s ease; height: 100%; }
+.cl-stat-link:hover .cl-stat-card { transform: translateY(-3px); box-shadow: var(--cl-shadow-lg); }
+.cl-stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.35rem; color: #fff; flex-shrink: 0; }
+.cl-tone-navy { background: linear-gradient(135deg, var(--cl-navy), var(--cl-ocean)); }
+.cl-tone-ocean { background: linear-gradient(135deg, var(--cl-ocean), var(--cl-ocean-soft)); }
+.cl-tone-gold { background: linear-gradient(135deg, var(--cl-gold), #a8842f); }
+.cl-tone-green { background: linear-gradient(135deg, #1f7a5a, #2a9d8f); }
+.cl-stat-value { font-size: 1.6rem; font-weight: 700; color: var(--cl-ink); line-height: 1.1; font-family: var(--cl-serif); }
+.cl-stat-label { color: var(--cl-muted); font-size: .86rem; }
+.cl-stat-hint { color: var(--cl-muted); font-size: .76rem; margin-top: 2px; }
+
+/* ============================================================
+   TABLES
+   ============================================================ */
+.cl-table-wrap { padding: 0; overflow: hidden; }
+.cl-table { color: var(--cl-text); }
+.cl-table thead th { color: var(--cl-muted); font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .8px; border-bottom: 1px solid var(--cl-line); padding: 14px 16px; background: #fbfcfd; }
+.cl-table tbody td { padding: 13px 16px; vertical-align: middle; border-color: var(--cl-line); }
+.cl-table tbody tr:hover { background: #f7f9fc; }
+.cl-table td .btn + .btn { margin-left: .4rem; }
+.cl-table td:last-child { white-space: nowrap; }
+
+/* ---------- Toolbar (filters/search above tables) ---------- */
+.cl-toolbar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+.cl-toolbar .cl-search { position: relative; flex: 1; min-width: 220px; }
+.cl-toolbar .cl-search i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--cl-muted); }
+.cl-toolbar .cl-search input { padding-left: 36px; }
+
+/* ============================================================
+   STATES (loading / error / empty)
+   ============================================================ */
+.cl-state { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 48px 20px; gap: 8px; }
+.cl-state-icon { font-size: 2.4rem; color: var(--cl-muted); }
+.cl-state-title { font-family: var(--cl-serif); font-size: 1.2rem; color: var(--cl-ink); }
+.cl-state-text { color: var(--cl-muted); }
+
+/* ============================================================
+   FORMS
+   ============================================================ */
+.form-control, .form-select { border-radius: 10px; border: 1px solid var(--cl-line); padding: .55rem .8rem; }
+.form-control:focus, .form-select:focus { border-color: var(--cl-gold); box-shadow: 0 0 0 .2rem rgba(197,162,83,.16); }
+.form-label { font-weight: 600; font-size: .85rem; color: var(--cl-ink); }
+.cl-form-section { margin-bottom: 18px; }
+.cl-form-section-title { font-weight: 600; color: var(--cl-navy); font-size: .9rem; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 10px; }
+
+/* ---------- Searchable select ---------- */
+.cl-ss { position: relative; }
+.cl-ss-control { display: flex; align-items: center; justify-content: space-between; cursor: pointer; min-height: 42px; }
+.cl-ss-control.disabled { background: #f1f3f6; cursor: not-allowed; }
+.cl-ss-icons { display: flex; align-items: center; gap: 4px; color: var(--cl-muted); }
+.cl-ss-clear { border: none; background: none; color: var(--cl-muted); padding: 0 2px; cursor: pointer; }
+.cl-ss-menu { background: #fff; border: 1px solid var(--cl-line); border-radius: 12px; box-shadow: var(--cl-shadow-lg); overflow: hidden; }
+.cl-ss-search { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--cl-line); color: var(--cl-muted); }
+.cl-ss-search input { border: none; outline: none; flex: 1; font-size: .9rem; }
+.cl-ss-list { max-height: 260px; overflow-y: auto; padding: 6px; }
+.cl-ss-option { display: flex; flex-direction: column; align-items: flex-start; width: 100%; border: none; background: none; text-align: left; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
+.cl-ss-option:hover, .cl-ss-option.active { background: var(--cl-bg); }
+.cl-ss-label { font-weight: 500; color: var(--cl-ink); font-size: .9rem; }
+.cl-ss-sub { font-size: .76rem; color: var(--cl-muted); }
+.cl-ss-empty { padding: 14px; text-align: center; color: var(--cl-muted); font-size: .88rem; }
+
+/* ============================================================
+   LOGIN — split screen
+   ============================================================ 
+.cl-login { min-height: 100vh; display: grid; grid-template-columns: 1.1fr 1fr; }
+.cl-login-visual { position: relative; display: flex; flex-direction: column; justify-content: flex-end; padding: 48px; color: #fff; background: linear-gradient(120deg, #0a2342 0%, #1e5a8a 60%, #2a9d8f 100%); overflow: hidden; }
+.cl-login-visual::after { content: ''; position: absolute; inset: 0; background: radial-gradient(1000px 500px at 80% -10%, rgba(197,162,83,.20), transparent 60%); }
+.cl-login-visual-content { position: relative; z-index: 1; }
+.cl-login-badge { font-family: var(--cl-serif); font-size: 2rem; font-weight: 600; }
+.cl-login-badge i { color: var(--cl-gold); margin-right: 10px; }
+.cl-login-tagline { font-size: 1.15rem; opacity: .92; margin-top: 10px; max-width: 420px; }
+.cl-login-form-side { display: flex; align-items: center; justify-content: center; padding: 40px 24px; background: var(--cl-bg); }
+.cl-login-card { width: 100%; max-width: 400px; }
+.cl-login-title { font-size: 1.8rem; font-weight: 600; color: var(--cl-navy); margin-bottom: 4px; }
+.cl-login-sub { color: var(--cl-muted); margin-bottom: 22px; }
+.cl-pw-wrap { position: relative; }
+.cl-pw-toggle { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); border: none; background: none; color: var(--cl-muted); cursor: pointer; padding: 4px 8px; }
+*/
+
+/* ---------- Login — full-bleed image + frosted card ---------- */
+.cl-login-bg {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;           /* use flex-end + padding-right for a right-aligned card */
+  padding: 24px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+.cl-login-bg::before {               /* readability overlay so the form stays legible */
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(120deg, rgba(10,35,66,.70), rgba(30,90,138,.40));
+}
+.cl-login-glass {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 420px;
+  padding: 36px 32px;
+  color: #fff;
+  background: rgba(255,255,255,.10);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.35);
+}
+.cl-login-brand {
+  font-family: var(--cl-serif);
+  font-size: 1.5rem; font-weight: 600; color: #fff;
+  margin-bottom: 18px;
+}
+.cl-login-brand i { color: var(--cl-gold); margin-right: 9px; }
+.cl-login-glass .cl-login-title { color: #fff; font-size: 1.7rem; font-weight: 600; margin-bottom: 2px; }
+.cl-login-glass .cl-login-sub { color: rgba(255,255,255,.82); margin-bottom: 20px; }
+.cl-login-glass .form-label { color: #fff; }
+.cl-login-glass .form-control {
+  background: rgba(255,255,255,.92);
+  border: 1px solid rgba(255,255,255,.5);
+  color: #14233b;
+}
+.cl-login-glass .form-control:focus { background: #fff; border-color: var(--cl-gold); }
+.cl-login-glass .cl-pw-toggle { color: var(--cl-muted); }
+.cl-login-switch { color: rgba(255,255,255,.85); }
+.cl-login-switch a { color: var(--cl-gold-soft); font-weight: 600; }
+
+/* Show/hide password eye — sits inside the password field, right side */
+.cl-pw-wrap { position: relative; }
+.cl-pw-wrap .form-control { padding-right: 44px; }   /* room so text doesn't slide under the icon */
+.cl-pw-toggle {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: var(--cl-muted);
+  padding: 6px 10px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2;
+}
+.cl-pw-toggle:hover { color: var(--cl-ink); }
+
+/* ============================================================
+   VOYAGE / BOOKING CARDS + hero
+   ============================================================ */
+.cl-hero { position: relative; border-radius: var(--cl-radius); overflow: hidden; color: #fff; padding: 42px 36px; margin-bottom: 26px; }
+.cl-hero-content { position: relative; z-index: 1; max-width: 640px; }
+.cl-hero h1 { color: #fff; font-size: 2.2rem; margin: 0 0 8px; }
+.cl-hero p { font-size: 1.08rem; opacity: .92; margin-bottom: 18px; }
+
+.cl-voyage-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+.cl-voyage-card { background: var(--cl-surface); border: 1px solid var(--cl-line); border-radius: var(--cl-radius); box-shadow: var(--cl-shadow-sm); overflow: hidden; display: flex; flex-direction: column; transition: transform .2s ease, box-shadow .2s ease; }
+.cl-voyage-card:hover { transform: translateY(-4px); box-shadow: var(--cl-shadow-lg); }
+.cl-voyage-banner { height: 132px; position: relative; display: flex; align-items: flex-end; padding: 14px; color: #fff; }
+.cl-voyage-banner .cl-voyage-port { font-weight: 600; font-size: .95rem; text-shadow: 0 1px 4px rgba(0,0,0,.3); }
+.cl-voyage-body { padding: 16px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.cl-voyage-name { font-family: var(--cl-serif); font-size: 1.25rem; color: var(--cl-navy); }
+.cl-voyage-meta { font-size: .86rem; color: var(--cl-muted); display: flex; flex-direction: column; gap: 3px; }
+.cl-voyage-foot { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-top: 1px solid var(--cl-line); }
+.cl-price { font-family: var(--cl-serif); font-size: 1.2rem; color: var(--cl-navy); font-weight: 600; }
+.cl-price small { font-family: var(--cl-sans); font-size: .72rem; color: var(--cl-muted); font-weight: 500; }
+
+.cl-booking-card { background: var(--cl-surface); border: 1px solid var(--cl-line); border-radius: var(--cl-radius); box-shadow: var(--cl-shadow-sm); padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.cl-booking-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.cl-booking-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
+.cl-kv .cl-kv-label { font-size: .72rem; text-transform: uppercase; letter-spacing: .5px; color: var(--cl-muted); }
+.cl-kv .cl-kv-value { font-weight: 600; color: var(--cl-ink); }
+.cl-booking-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ---------- Booking flow stepper ---------- */
+.cl-stepper { display: flex; align-items: center; gap: 6px; margin-bottom: 24px; flex-wrap: wrap; }
+.cl-step { display: flex; align-items: center; gap: 8px; color: var(--cl-muted); font-size: .88rem; }
+.cl-step-num { width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: #e7ebf1; color: var(--cl-muted); font-weight: 700; font-size: .8rem; }
+.cl-step.active .cl-step-num { background: var(--cl-navy); color: #fff; }
+.cl-step.done .cl-step-num { background: #1f7a5a; color: #fff; }
+.cl-step.active { color: var(--cl-navy); font-weight: 600; }
+.cl-step-sep { color: var(--cl-line); }
+
+/* ---------- Page transition ---------- */
+.cl-page { animation: cl-fade .35s ease both; }
+@keyframes cl-fade { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .cl-page, .cl-voyage-card, .cl-stat-card { animation: none !important; transition: none !important; } }
+
+/* ---------- Dropdown polish ---------- */
+.dropdown-menu { border: 1px solid var(--cl-line); border-radius: 12px; box-shadow: var(--cl-shadow); padding: .4rem; }
+.dropdown-item { border-radius: 8px; padding: .5rem .8rem; font-size: .9rem; }
+.dropdown-item:hover { background: var(--cl-bg); }
+.modal-content { border: none; border-radius: var(--cl-radius); box-shadow: var(--cl-shadow-lg); }
+.modal-title { font-family: var(--cl-serif); color: var(--cl-navy); }
+
+/* ============================================================
+   RESPONSIVE — one navbar that collapses to a slide-down menu
+   ============================================================ */
+
+/* Tablet, small laptop & phone: brand + hamburger on the bar; links drop into
+   a panel. Collapses below 1200px so even the 9-item admin nav never crowds. */
+@media (max-width: 1199.98px) {
+  .cl-nav-inner { height: 62px; gap: 12px; padding: 0 16px; }
+  .cl-nav-toggle { display: inline-flex; }
+
+  .cl-nav-menu {
+    position: absolute; top: 62px; left: 0; right: 0;
+    flex-direction: column; align-items: stretch; gap: 0;
+    background: #fff; border-bottom: 1px solid var(--cl-line);
+    box-shadow: var(--cl-shadow-lg);
+    max-height: 0; overflow: hidden; opacity: 0;
+    transition: max-height .3s ease, opacity .2s ease, padding .3s ease;
+    padding: 0 12px;
+  }
+  .cl-nav-menu--open { max-height: calc(100vh - 62px); overflow-y: auto; opacity: 1; padding: 8px 12px 14px; }
+
+  .cl-nav-links { flex-direction: column; align-items: stretch; gap: 2px; overflow: visible; width: 100%; }
+  .cl-nav-item { padding: 13px 14px; font-size: 1rem; border-radius: 12px; }
+  .cl-nav-item i { display: inline-block; font-size: 1.1rem; width: 22px; text-align: center; }
+  .cl-nav-badge { margin-left: auto; }
+
+  .cl-nav-account { width: 100%; margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--cl-line); }
+  .cl-nav-account .cl-profile-toggle { width: 100%; justify-content: flex-start; padding: 6px 12px 6px 6px; }
+  .cl-nav-account .cl-profile-meta { display: flex; }   /* name + role return in the roomy dropdown */
+
+  .cl-app-content { padding: 20px 16px 44px; }
+}
+
+/* Phone: tighten headings, heroes and full-bleed cards. */
+@media (max-width: 767.98px) {
+  .cl-page-title { font-size: 1.55rem; }
+  .cl-page-header { margin-bottom: 18px; }
+  .cl-page-actions { width: 100%; }
+  .cl-hero { padding: 26px 18px; }
+  .cl-hero h1 { font-size: 1.6rem; }
+  .cl-hero p { font-size: 1rem; }
+  .cl-voyage-grid { grid-template-columns: 1fr; gap: 16px; }
+  .cl-toolbar { flex-direction: column; align-items: stretch; }
+  .cl-toolbar .cl-search, .cl-toolbar .form-select { max-width: none !important; width: 100%; }
+  .cl-stat-value { font-size: 1.4rem; }
+}
+
+/* Small phone: let wide tables scroll instead of squashing. */
+@media (max-width: 575.98px) {
+  .cl-nav-brand { font-size: 1.28rem; }
+  .cl-app-content { padding: 16px 12px 40px; }
+  .cl-card { padding: 14px; }
+  .cl-table-wrap { overflow-x: auto; }
+  .cl-table { min-width: 640px; }
+  .cl-booking-actions .btn, .cl-page-actions .btn { flex: 1; }
+}
