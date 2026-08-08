@@ -1,99 +1,204 @@
-# CruiseLine — Frontend
+# 🚢 CruiseLine — Operations & Passenger Management System
 
-A redesigned React frontend for the CruiseLine Operations & Passenger Management system.
-All roles share **one unified interface** — a single top-navigation shell (no sidebar),
-fully responsive down to mobile. Passengers and staff see the same chrome; only the
-screens and the navigation links differ by role.
+A full-stack cruise management platform: passengers discover, book and pay for voyages;
+staff run the operation (voyages, embarkation, excursions, onboard accounts, analytics).
+A **Spring Cloud microservices** backend behind an API gateway, and a **React (Vite)**
+single-page frontend with one unified, responsive, role-aware UI.
 
-- **Passenger** — a clean travel-app: discover → choose → book → pay → manage trip.
-- **Staff / Operations** — a role-based operations console (Admin, Embarkation Officer,
-  Excursion Coordinator, Purser, Onboard Agent).
+<p align="left">
+  <img src="https://img.shields.io/badge/Java-17-007396?logo=openjdk&logoColor=white" />
+  <img src="https://img.shields.io/badge/Spring%20Boot-3.x-6DB33F?logo=springboot&logoColor=white" />
+  <img src="https://img.shields.io/badge/Spring%20Cloud-Gateway%20%2B%20Eureka-6DB33F?logo=spring&logoColor=white" />
+  <img src="https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black" />
+  <img src="https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white" />
+  <img src="https://img.shields.io/badge/MySQL-8-4479A1?logo=mysql&logoColor=white" />
+  <img src="https://img.shields.io/badge/Auth-JWT-000000?logo=jsonwebtokens&logoColor=white" />
+  <img src="https://img.shields.io/badge/Tests-JUnit5%20%2B%20Mockito-25A162?logo=junit5&logoColor=white" />
+</p>
 
-## Requirements
+---
+
+## ✨ Features
+
+**Passenger**
+- Browse voyages, view cabin categories & availability
+- 5-step booking wizard (cabin → guest → review → pay → done)
+- Manage bookings: pay balance, amend (while tentative), cancel
+- Onboard account, shore excursions, notifications, profile
+
+**Staff / Operations** (role-based)
+- **Admin** — voyages & cabins, all bookings, users, analytics, everything
+- **Embarkation Officer** — manifest & check-in, muster stations, drills (create + edit)
+- **Excursion Coordinator** — excursion catalogue & manifests
+- **Purser** — onboard accounts & payments
+- **Onboard Agent** — onboard accounts
+
+**Platform**
+- JWT auth with one-shot refresh; forgot/reset password flow
+- Centralized routing + auth at the API gateway; service discovery via Eureka
+- One responsive UI shell for every role (no sidebar); mobile-friendly
+- Service-layer unit tests across all 8 services
+
+---
+
+## 🏗️ Architecture
+
+```
+                    ┌─────────────────────────┐
+   Browser  ─────►  │   React SPA (Vite)      │
+                    └───────────┬─────────────┘
+                                │  HTTPS / JWT
+                                ▼
+                    ┌─────────────────────────┐
+                    │  API Gateway  (:8081)   │  ← validates JWT, CORS, routing
+                    └───────────┬─────────────┘
+                                │  discovers via
+                                ▼
+                    ┌─────────────────────────┐
+                    │  Eureka Registry (:8761)│
+                    └───────────┬─────────────┘
+        ┌───────────────┬───────┴───────┬───────────────┐
+        ▼               ▼               ▼               ▼
+  auth-service    voyage-service   booking-service   embarkation-service
+  excursion-service   account-service   analytics-service   notification-service
+        │  (each owns its own MySQL schema — database-per-service)
+        ▼
+   ┌──────────┐
+   │  MySQL   │
+   └──────────┘
+```
+
+- **Gateway** is the single entry point — validates the access token, injects trusted
+  `X-User-*` headers, and routes to services by path.
+- **Database-per-service** — every service owns its schema; no shared tables.
+- Frontend never calls a service directly; everything goes through the gateway.
+
+---
+
+## 🧰 Tech stack
+
+| Layer | Technology |
+|---|---|
+| Backend | Java 17, Spring Boot, Spring Security (JWT), Spring Data JPA |
+| Microservices | Spring Cloud Gateway, Netflix Eureka, OpenFeign |
+| Database | MySQL (one schema per service) |
+| Frontend | React 18, Vite, React Router, React-Bootstrap, Axios |
+| Testing | JUnit 5, Mockito, AssertJ |
+
+---
+
+## 🚀 Getting started
+
+### Prerequisites
+- Java 17+ and Maven
 - Node 18+
-- The CruiseLine backend running behind the gateway (default `http://localhost:8081`),
-  with Eureka + all services up.
+- MySQL running on `localhost:3306` (schemas auto-create on first run)
 
-## Run
+### 1) Backend — start in this order
 
 ```bash
+# 1. Service registry
+cd discovery-server   && mvn spring-boot:run     # :8761
+
+# 2. API gateway
+cd api-gateway        && mvn spring-boot:run     # :8081
+
+# 3. Business services (each in its own terminal)
+cd auth-service       && mvn spring-boot:run
+cd voyage-service     && mvn spring-boot:run
+cd booking-service    && mvn spring-boot:run
+cd embarkation-service && mvn spring-boot:run
+cd excursion-service  && mvn spring-boot:run
+cd account-service    && mvn spring-boot:run
+cd analytics-service  && mvn spring-boot:run
+cd notification-service && mvn spring-boot:run
+```
+
+> Services register with Eureka and are reached only through the gateway on **:8081**.
+
+### 2) Frontend
+
+```bash
+cd CruiseLine_Frontend
 npm install
-npm run dev
+npm run dev            # http://localhost:5173
 ```
 
-Opens on http://localhost:5173 (or the next free port). The gateway CORS accepts any
-localhost origin, so 5173 / 5174 / etc. all work.
-
-Build for production:
-
-```bash
-npm run build
-npm run preview
-```
-
-## Configuration
-The backend base URL is configurable — edit `.env`:
+Configure the gateway URL in `CruiseLine_Frontend/.env`:
 
 ```
 VITE_API_BASE_URL=http://localhost:8081
 ```
 
-## How it connects to the backend
-- **Auth:** `POST /api/auth/login` → `{ accessToken, refreshToken, userId, name, email, role }`.
-  Tokens are stored in `localStorage`; the access token is attached as `Authorization: Bearer …`
-  on every request. A 401 triggers a one-shot refresh via `/api/auth/refresh-token`.
-- **Password reset:** `POST /api/auth/forgot-password` issues a single-use, 15-minute reset
-  code; `POST /api/auth/reset-password` takes the code + new password. Both are public.
-- **Envelope:** every response is `{ success, message, data, timestamp }` — the client
-  unwraps `.data`. Lists are Spring pages (`{ content, totalPages, … }`).
-- **Roles** (single role per user): `PASSENGER, EMBARKATION_OFFICER, ONBOARD_AGENT,
-  EXCURSION_COORDINATOR, PURSER, ADMIN`. Self-registration always creates a PASSENGER.
-- No fake endpoints or mock data — every call maps to a real backend endpoint.
-
-## Project structure
-
+### Default admin (seeded by the backend)
 ```
-src/
-  api/            client.js + services/ (one module per domain)
-  auth/           AuthContext, ProtectedRoute (role-aware guards)
-  config/         roles.js (capability sets), nav.js (role → navigation)
-  components/
-    ui/           PageHeader, DataTable, StatusBadge, StatCard, states,
-                  ConfirmDialog, SearchableSelect, VoyageCard, BookingCard
-    layout/       AppLayout, AppNavbar (one top-nav shell for all roles), ProfileMenu
-  hooks/          useApi (loading/error/reload), useOptions (pickers)
-  notifications/  NotificationContext (polling, toasts + unread badge)
-  constants/      enums.js (values, status→variant, money/humanize helpers)
-  features/       auth/ (LoginPage),
-                  passenger/ (Home, Explore, VoyageDetail, BookingFlow,
-                              MyBookings, Excursions, Profile),
-                  dashboard, voyages, bookings, embarkation, excursions,
-                  accounts, analytics, users, notifications   (staff screens)
-  assets/         images.js (local gradient imagery, no external URLs)
-  styles/         theme.css (design system + responsive @media rules)
+admin@cruiseline.com  /  Admin@12345
 ```
 
-## UI & navigation
-One responsive top navbar for **every** role — no sidebar. It collapses to a hamburger
-menu below 1200px; links are role-filtered from `config/nav.js`, and the account menu
-(name, role, sign out, and Profile for passengers) sits on the right.
+---
 
-- **Passenger:** Home · Explore · My Bookings · Onboard Account · Excursions · Notifications  (+ Profile in the account menu)
-- **Admin:** Dashboard · Voyages · Bookings · Embarkation · Excursions · Accounts · Analytics · Notifications · Users
-- **Embarkation Officer:** Dashboard · Embarkation (Manifest/Check-in · Muster · Drills — muster & drills are editable) · Notifications
-- **Excursion Coordinator:** Dashboard · Excursions (catalogue + manifests) · Notifications
-- **Purser:** Dashboard · Accounts · Payments · Notifications
-- **Onboard Agent:** Dashboard · Accounts · Notifications
+## 🔐 Authentication flow
+1. `POST /api/auth/login` → `{ accessToken, refreshToken, userId, name, email, role }`.
+2. Frontend stores tokens in `localStorage`; every request carries `Authorization: Bearer <token>`.
+3. The gateway validates the JWT once and forwards trusted identity headers to services.
+4. On a `401`, the client silently calls `/api/auth/refresh-token` and replays the request.
+5. Forgot password: `POST /api/auth/forgot-password` → single-use, 15-min reset code →
+   `POST /api/auth/reset-password`.
 
-Frontend route guards are UX only — the backend remains the real authority.
+All responses use a common envelope: `{ success, message, data, timestamp }`.
 
-## Backend touch-points
-This redesign required a few small backend additions (so it is no longer strictly "unchanged"):
-- **api-gateway:** CORS widened to any localhost origin (`allowedOriginPatterns`), and the
-  two password-reset paths whitelisted.
-- **auth-service:** password-reset endpoints (forgot / reset) + reset-token fields on `User`.
-- **embarkation-service:** `PUT` endpoints to edit muster stations and drill attendance.
-- **All 8 services:** service-layer unit tests (JUnit 5 + Mockito).
+---
 
-## Default admin
-Seeded by the backend: `admin@cruiseline.com` / `Admin@12345` (not shown in the UI).
+## 🧪 Testing
+
+Service-layer unit tests (JUnit 5 + Mockito) exist for every service — repositories, Feign
+clients and gateways are mocked, so **no database or running services are required**.
+
+```bash
+cd <service>   &&   mvn test        # e.g. cd booking-service && mvn test
+```
+
+They assert the business rules in isolation (e.g. "a passenger can't check in without a
+confirmed booking", payment math, cabin-capacity guards, analytics KPI formulas).
+
+---
+
+## 📁 Repository layout
+
+```
+.
+├── discovery-server/          # Eureka registry
+├── api-gateway/               # Spring Cloud Gateway (routing, CORS, JWT validation)
+├── auth-service/              # login, register, JWT, password reset, users
+├── voyage-service/            # voyages, cabin categories & cabins
+├── booking-service/           # bookings, payments
+├── embarkation-service/       # check-in, muster stations, drills
+├── excursion-service/         # shore excursions & manifests
+├── account-service/           # onboard accounts & charges
+├── analytics-service/         # KPIs & reports
+├── notification-service/      # notifications
+└── CruiseLine_Frontend/       # React (Vite) SPA
+    └── src/
+        ├── api/               # axios client + one service module per domain
+        ├── auth/              # AuthContext, ProtectedRoute (role guards)
+        ├── config/            # roles.js (capabilities), nav.js (role → nav)
+        ├── components/        # ui/ primitives + layout/ (AppLayout, AppNavbar)
+        ├── hooks/             # useApi, useOptions
+        ├── notifications/     # NotificationContext (polling + unread badge)
+        ├── constants/         # enums, formatters
+        ├── features/          # auth/, passenger/, and staff screens
+        └── styles/            # theme.css (design system + responsive rules)
+```
+
+---
+
+## 🗺️ Roles & navigation
+Single role per user: `PASSENGER · EMBARKATION_OFFICER · ONBOARD_AGENT ·
+EXCURSION_COORDINATOR · PURSER · ADMIN`. One responsive top navbar for all roles; links
+are role-filtered. Self-registration always creates a **PASSENGER**. Frontend route guards
+are UX only — the backend (`@PreAuthorize`) is the real authority.
+
+---
+
+## 📄 License
+For educational / demonstration use.
