@@ -32,12 +32,17 @@ export default function LoginPage() {
 
   if (isAuthenticated) navigate(homeFor(user.role), { replace: true })
 
+  // A valid email needs text, an "@", and a dotted domain after it.
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+
   // Switch mode and clear any transient messages.
   function go(next) { setMode(next); setError(''); setInfo('') }
 
   async function submitLogin(e) {
     e.preventDefault()
-    setError(''); setBusy(true)
+    setError('')
+    if (!emailValid) { setError('Please enter a valid email address.'); return }
+    setBusy(true)
     try {
       const u = await login(email, password)
       navigate(homeFor(u.role), { replace: true })
@@ -50,9 +55,12 @@ export default function LoginPage() {
 
   async function submitRegister(e) {
     e.preventDefault()
-    setError(''); setInfo(''); setBusy(true)
+    setError(''); setInfo('')
+    if (!emailValid) { setError('Please enter a valid email address.'); return }
+    if (phone.length !== 10) { setError('Please enter a valid phone number.'); return }
+    setBusy(true)
     try {
-      await authService.register({ name, email, password, phone: phone || null })
+      await authService.register({ name, email, password, phone })
       const u = await login(email, password)
       navigate(homeFor(u.role), { replace: true })
     } catch (err) {
@@ -64,7 +72,9 @@ export default function LoginPage() {
 
   async function submitForgot(e) {
     e.preventDefault()
-    setError(''); setInfo(''); setBusy(true)
+    setError(''); setInfo('')
+    if (!emailValid) { setError('Please enter a valid email address.'); return }
+    setBusy(true)
     try {
       const data = await authService.forgotPassword(email)
       // No mail server in this project, so the reset code is returned directly.
@@ -113,7 +123,7 @@ export default function LoginPage() {
           {mode === 'register' && (
             <Form.Group className="mb-3">
               <Form.Label>Full name</Form.Label>
-              <Form.Control value={name} onChange={(e) => setName(e.target.value)} required placeholder="Jane Traveler" />
+              <Form.Control value={name} onChange={(e) => setName(e.target.value)} required placeholder="Enter your full name" />
             </Form.Group>
           )}
 
@@ -121,13 +131,23 @@ export default function LoginPage() {
             <Form.Group className="mb-3">
               <Form.Label>Email</Form.Label>
               <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="Enter your email" />
+              <div style={{ minHeight: '1.25rem' }}>
+                {email.length > 0 && !emailValid &&
+                  <Form.Text className="text-warning">Please enter a valid email address.</Form.Text>}
+              </div>
             </Form.Group>
           )}
 
           {mode === 'register' && (
             <Form.Group className="mb-3">
-              <Form.Label>Phone <span className="text-white-50">(optional)</span></Form.Label>
-              <Form.Control value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 555 010 1000" />
+              <Form.Label>Phone number</Form.Label>
+              <Form.Control type="tel" inputMode="numeric" value={phone}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                required placeholder="Enter your mobile number" />
+              <div style={{ minHeight: '1.25rem' }}>
+                {phone.length > 0 && phone.length < 10 &&
+                  <Form.Text className="text-warning">Please enter a valid phone number.</Form.Text>}
+              </div>
             </Form.Group>
           )}
 

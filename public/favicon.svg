@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- CruiseLine mark: a life-preserver ring on a navy badge -->
+  <circle cx="16" cy="16" r="16" fill="#0a2342"/>
+  <!-- gold ring (annulus r5..r11) -->
+  <circle cx="16" cy="16" r="8" fill="none" stroke="#c5a253" stroke-width="6"/>
+  <!-- four white grab segments -->
+  <rect x="15" y="4"  width="2" height="7" rx="1" fill="#ffffff"/>
+  <rect x="15" y="21" width="2" height="7" rx="1" fill="#ffffff"/>
+  <rect x="4"  y="15" width="7" height="2" rx="1" fill="#ffffff"/>
+  <rect x="21" y="15" width="7" height="2" rx="1" fill="#ffffff"/>
+  <!-- centre hole -->
+  <circle cx="16" cy="16" r="5" fill="#0a2342"/>
+</svg>

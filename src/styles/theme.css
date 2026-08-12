@@ -44,6 +44,10 @@ h1, h2, h3, h4 { font-family: var(--cl-serif); color: var(--cl-ink); letter-spac
 a { color: var(--cl-ocean); text-decoration: none; }
 a:hover { color: var(--cl-navy); }
 html, body { max-width: 100%; overflow-x: hidden; }
+/* Reserve the scrollbar's width at all times so the centered layout never
+   shifts left when a page grows tall enough to need a vertical scrollbar
+   (e.g. selecting a cabin category reveals an extra helper line). */
+html { scrollbar-gutter: stable; }
 
 /* ---------- Buttons ---------- */
 .btn { border-radius: 10px; font-weight: 600; letter-spacing: .2px; transition: transform .15s ease, box-shadow .2s ease, filter .2s ease; }
@@ -217,7 +221,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
 /* ============================================================
    FORMS
    ============================================================ */
-.form-control, .form-select { border-radius: 10px; border: 1px solid var(--cl-line); padding: .55rem .8rem; }
+.form-control, .form-select { border-radius: 10px; border: 1px solid var(--cl-line); padding: .55rem .8rem; transition: background-color .18s ease, color .18s ease, border-color .18s ease, box-shadow .2s ease; }
 .form-control:focus, .form-select:focus { border-color: var(--cl-gold); box-shadow: 0 0 0 .2rem rgba(197,162,83,.16); }
 .form-label { font-weight: 600; font-size: .85rem; color: var(--cl-ink); }
 .cl-form-section { margin-bottom: 18px; }

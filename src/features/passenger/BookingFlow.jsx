@@ -4,11 +4,16 @@ import { Button, Form, Row, Col, Alert } from 'react-bootstrap'
 import PageHeader from '../../components/ui/PageHeader.jsx'
 import AsyncSection from '../../components/ui/AsyncSection.jsx'
 import StatusBadge from '../../components/ui/StatusBadge.jsx'
+import SearchableSelect from '../../components/ui/SearchableSelect.jsx'
 import { useApi } from '../../hooks/useApi.js'
 import { voyageService } from '../../api/services/voyages.js'
 import { bookingService } from '../../api/services/bookings.js'
 import { money, humanize } from '../../constants/enums.js'
+import { COUNTRIES } from '../../constants/countries.js'
 import { errMsg } from '../../api/client.js'
+
+// Small red asterisk for required-field labels.
+const Req = () => <span className="text-danger"> *</span>
 
 const STEPS = ['Cabin', 'Guest', 'Review', 'Payment', 'Done']
 
@@ -44,6 +49,7 @@ export default function BookingFlow() {
   const [step, setStep] = useState(0)
   const [categoryId, setCategoryId] = useState('')
   const [cabins, setCabins] = useState([])
+  const [loadingCabins, setLoadingCabins] = useState(false)
   const [cabinId, setCabinId] = useState('')
   const [paxCount, setPaxCount] = useState(1)
   const [dining, setDining] = useState('')
@@ -62,10 +68,12 @@ export default function BookingFlow() {
   useEffect(() => {
     setCabinId('')
     setCabins([])
-    if (!categoryId) return
+    if (!categoryId) { setLoadingCabins(false); return }
+    setLoadingCabins(true)
     voyageService.cabins(categoryId)
       .then((list) => setCabins((list || []).filter((c) => c.status === 'AVAILABLE')))
       .catch((e) => setError(errMsg(e)))
+      .finally(() => setLoadingCabins(false))
   }, [categoryId])
 
   const setLeadField = (k, v) => setLead((l) => ({ ...l, [k]: v }))
@@ -77,6 +85,9 @@ export default function BookingFlow() {
   }
   function nextFromGuest() {
     if (!lead.name.trim()) { setError('Lead guest name is required.'); return }
+    if (!lead.passportNumber.trim()) { setError('Passport number is required.'); return }
+    if (!lead.passportExpiry) { setError('Passport expiry date is required.'); return }
+    if (lead.emergencyContact.length !== 10) { setError('Emergency contact must be a 10-digit phone number.'); return }
     setError(''); setStep(2)
   }
 
@@ -141,7 +152,7 @@ export default function BookingFlow() {
                 <div className="cl-form-section-title">Choose your cabin</div>
                 <Row className="g-3">
                   <Col md={6}>
-                    <Form.Label>Category</Form.Label>
+                    <Form.Label>Category<Req /></Form.Label>
                     <Form.Select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
                       <option value="">Select a category…</option>
                       {cats.map((c) => (
@@ -152,22 +163,24 @@ export default function BookingFlow() {
                     </Form.Select>
                   </Col>
                   <Col md={6}>
-                    <Form.Label>Cabin</Form.Label>
+                    <Form.Label>Cabin<Req /></Form.Label>
                     <Form.Select value={cabinId} onChange={(e) => setCabinId(e.target.value)} disabled={!categoryId}>
-                      <option value="">{categoryId ? 'Select an available cabin…' : 'Choose a category first'}</option>
+                      
+                      <option value="">{!categoryId ? 'Choose a category first' : 'Select an available cabin…'}</option>
                       {cabins.map((c) => (
                         <option key={c.cabinId} value={c.cabinId}>
                           {c.cabinNumber} — Deck {c.deck || '—'} · {humanize(c.location)}
                         </option>
                       ))}
                     </Form.Select>
-                    {categoryId && cabins.length === 0 && <Form.Text className="text-danger">No available cabins in this category.</Form.Text>}
+                    {categoryId && !loadingCabins && cabins.length === 0 && <Form.Text className="text-danger">No available cabins in this category.</Form.Text>}
                   </Col>
                   <Col md={6}>
-                    <Form.Label>Guests</Form.Label>
+                    <Form.Label>Guests<Req /></Form.Label>
                     <Form.Control type="number" min={1} max={maxOcc} value={paxCount}
                       onChange={(e) => setPaxCount(e.target.value)} />
-                    {category && <Form.Text className="text-muted">Up to {maxOcc} guests.</Form.Text>}
+                    
+                    <Form.Text className="text-muted">{category ? `Up to ${maxOcc} guests.` : 'Select a category to set the guest limit.'}</Form.Text>
                   </Col>
                   <Col md={6}>
                     <Form.Label>Dining preference <span className="text-muted">(optional)</span></Form.Label>
@@ -192,19 +205,29 @@ export default function BookingFlow() {
             <>
               <div className="cl-form-section-title">Lead guest details</div>
               <Row className="g-3">
-                <Col md={6}><Form.Label>Full name *</Form.Label><Form.Control value={lead.name} onChange={(e) => setLeadField('name', e.target.value)} /></Col>
+                <Col md={6}><Form.Label>Full name<Req /></Form.Label><Form.Control value={lead.name} onChange={(e) => setLeadField('name', e.target.value)} /></Col>
                 <Col md={3}><Form.Label>Date of birth</Form.Label><Form.Control type="date" value={lead.dateOfBirth} onChange={(e) => setLeadField('dateOfBirth', e.target.value)} /></Col>
                 <Col md={3}><Form.Label>Gender</Form.Label>
                   <Form.Select value={lead.gender} onChange={(e) => setLeadField('gender', e.target.value)}>
                     <option value="">—</option><option>Female</option><option>Male</option><option>Other</option>
                   </Form.Select>
                 </Col>
-                <Col md={4}><Form.Label>Nationality</Form.Label><Form.Control value={lead.nationality} onChange={(e) => setLeadField('nationality', e.target.value)} /></Col>
-                <Col md={4}><Form.Label>Passport number</Form.Label><Form.Control value={lead.passportNumber} onChange={(e) => setLeadField('passportNumber', e.target.value)} /></Col>
-                <Col md={4}><Form.Label>Passport expiry</Form.Label><Form.Control type="date" value={lead.passportExpiry} onChange={(e) => setLeadField('passportExpiry', e.target.value)} /></Col>
+                <Col md={4}><Form.Label>Nationality</Form.Label>
+                  <SearchableSelect options={COUNTRIES.map((c) => ({ value: c, label: c }))}
+                    value={lead.nationality} onChange={(v) => setLeadField('nationality', v)}
+                    placeholder="Select a country…" emptyText="No country matches" />
+                </Col>
+                <Col md={4}><Form.Label>Passport number<Req /></Form.Label><Form.Control value={lead.passportNumber} onChange={(e) => setLeadField('passportNumber', e.target.value)} required /></Col>
+                <Col md={4}><Form.Label>Passport expiry<Req /></Form.Label><Form.Control type="date" value={lead.passportExpiry} onChange={(e) => setLeadField('passportExpiry', e.target.value)} required /></Col>
                 <Col md={6}><Form.Label>Dietary restrictions</Form.Label><Form.Control value={lead.dietaryRestrictions} onChange={(e) => setLeadField('dietaryRestrictions', e.target.value)} /></Col>
                 <Col md={6}><Form.Label>Medical notes</Form.Label><Form.Control value={lead.medicalNotes} onChange={(e) => setLeadField('medicalNotes', e.target.value)} /></Col>
-                <Col md={12}><Form.Label>Emergency contact</Form.Label><Form.Control value={lead.emergencyContact} onChange={(e) => setLeadField('emergencyContact', e.target.value)} placeholder="Name · phone" /></Col>
+                <Col md={12}><Form.Label>Emergency contact (phone)<Req /></Form.Label>
+                  <Form.Control type="tel" inputMode="numeric" value={lead.emergencyContact}
+                    onChange={(e) => setLeadField('emergencyContact', e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    placeholder="10-digit phone number" />
+                  {lead.emergencyContact.length > 0 && lead.emergencyContact.length < 10 &&
+                    <Form.Text className="text-danger">Please enter a valid phone number.</Form.Text>}
+                </Col>
               </Row>
               <div className="d-flex justify-content-between mt-4">
                 <Button variant="outline-secondary" onClick={() => setStep(0)}><i className="bi bi-arrow-left me-2" />Back</Button>
