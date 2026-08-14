@@ -1,9 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import AppNavbar from './AppNavbar.jsx'
 
-// The single application shell used by every role: top navbar + centered
-// content + footer. Passengers and staff get the identical chrome; the router
-// decides which pages render inside <Outlet/>.
 export default function AppLayout() {
   const location = useLocation()
   return (
